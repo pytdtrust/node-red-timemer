@@ -1,0 +1,63 @@
+context.loop = context.loop || "stop";
+context.loops = context.loops || 0;
+
+context.setLoop = context.setLoop || 10;
+context.isManualStop = false;
+
+var getPayload = msg.payload;
+if(getPayload.length>0 && getPayload!==''){
+    var res = getPayload.split("loop=");
+    if(res.length > 1){
+        var no = res[1];
+        if(no>0){
+        context.setLoop  = parseInt(res[1], 0);
+        }
+    }
+    if(getPayload=='stop'){
+       context.isManualStop = true; 
+    }else{
+        context.isManualStop = false; 
+    }
+}
+
+if(context.loops==context.setLoop){
+    msg.payload="stop"
+}
+
+switch (msg.payload) {
+	case "stop":
+		context.loops = context.loops + 1;
+		if(!context.isManualStop){
+		    msg.payload = "stopped";
+		}else{
+		     msg.payload = "manualstoped";
+		}
+	
+		
+		context.loop = "stop";
+		return [msg,null];
+	case "toggle":
+		if (context.loop == "start") {
+			msg.payload = "stopped";
+			context.loop = "stop";
+			return [msg,null];
+		} else {
+			msg.payload = "started";
+			context.loop = "loop";
+			context.loops = 1;
+			return [msg,msg];
+		} break
+	case "start":
+		msg.payload = "started";
+		context.loop = "loop";
+		context.loops = 0;
+		return [msg,msg];
+	default:
+		if (context.loop == "loop") {
+			context.loops = context.loops + 1;
+			msg.payload = context.loops;
+			return [msg,msg];
+		} else {
+			return [null,null]; 
+		}
+}
